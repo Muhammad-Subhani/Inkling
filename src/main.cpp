@@ -1,7 +1,10 @@
+#include "../include/Bar.h"
+#include "../include/Button.h"
 #include "../include/Canvas.h"
 #include "../include/Diamond.h"
 #include "../include/Ellipse.h"
 #include "../include/RectangleShape.h"
+#include <cstddef>
 #include <memory>
 #include <raylib.h>
 enum class ShapeType { Rect, Ellipse, Diamond };
@@ -26,6 +29,12 @@ int main() {
   ShapeType current = ShapeType::Rect;
   Vector2 origin{};
   bool dragging = false;
+  float MainBarX = 20;
+  float MainBarY = (GetScreenHeight() - 600) / 2.0;
+  Bar MainBar(Vector2{MainBarX, MainBarY});
+  for (size_t i = 0; i < 10; i++) {
+    MainBar.Add(std::make_unique<Button>(Vector2{0, 0}));
+  }
 
   while (!WindowShouldClose()) {
     Vector2 mouse = GetMousePosition();
@@ -48,6 +57,8 @@ int main() {
 
     BeginDrawing();
     ClearBackground(BLACK);
+    MainBar.UpdateState(mouse);
+    MainBar.Draw();
     canvas.Draw();
     if (dragging)
       MakeShape(current, origin, mouse)->Draw(); // live preview
