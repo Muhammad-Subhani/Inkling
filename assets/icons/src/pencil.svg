@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#e4e4e7" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(1.0, 0.5) scale(0.82)">
+    <path clip-rule="evenodd" d="m7.643 15.69 7.774-7.773a2.357 2.357 0 1 0-3.334-3.334L4.31 12.357a3.333 3.333 0 0 0-.977 2.357v1.953h1.953c.884 0 1.732-.352 2.357-.977Z" />
+    <path d="m11.25 5.417 3.333 3.333" />
+  </g>
+  <text x="22.5" y="22.5" font-family="sans-serif" font-size="4.8" font-weight="bold" fill="#b0b0b8" stroke="none" text-anchor="end">P</text>
+</svg>

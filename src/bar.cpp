@@ -35,3 +35,30 @@ void Bar::UpdateState(Vector2 mouse) {
     p->isHovered(mouse);
   }
 }
+void Bar::SetWhichButtonPressed() {
+  for (size_t i = 0; i < allButtons.size(); i++) {
+    if (i != (size_t)pressed)
+      allButtons[i]->ChangeIsPressedStatus(0);
+    else
+      allButtons[i]->ChangeIsPressedStatus(1);
+  }
+}
+void Bar::SelectAbutton(Vector2 mousePos) {
+
+  if (mousePos.x >= bound.x && mousePos.x <= bound.x + bound.width &&
+      mousePos.y >= bound.y && mousePos.y <= bound.y + bound.height) {
+    for (size_t i = 0; i < allButtons.size(); i++) {
+      if (mousePos.x >= allButtons[i]->GetOrigin().x &&
+          mousePos.x <=
+              allButtons[i]->GetOrigin().x + allButtons[i]->getWitdh() &&
+          mousePos.y >= allButtons[i]->GetOrigin().y &&
+          mousePos.y <=
+              allButtons[i]->GetOrigin().y + allButtons[i]->getheight()) {
+        ChangePressed(i);
+        break;
+      }
+    }
+  }
+}
+Vector2 Bar::GetOrigin() const { return Vector2{bound.x, bound.y}; }
+Vector2 Bar::GetDimension() const { return Vector2{bound.width, bound.height}; }
