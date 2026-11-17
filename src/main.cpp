@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <memory>
 #include <raylib.h>
+#include <vector>
 
 int main() {
   Window window(800, 800, "Inkling");
@@ -21,23 +22,46 @@ int main() {
                "assets/icons/text.png", "assets/icons/twinkle.png",
                "assets/icons/eraser.png"});
 
+  const std::vector<const char *> shortcuts = {
+      "H", "V", "R", "D", "O", "A", "L", "P", "T", "K", "E"};
+  const std::vector<const char *> tooltips = {
+      "Hand - H", "Select - V", "Rectangle - R", "Diamond - D",
+      "Ellipse - O", "Arrow - A", "Line - L", "Draw - P",
+      "Text - T", "Magic wand - K", "Eraser - E"};
+
   Canvas canvas;
   ShapeType current = ShapeType::Rect;
   Vector2 origin{};
   bool dragging = false;
-  float MainBarX = 20;
-  float MainBarY = (GetScreenHeight() - 600) / 2.0;
+  float MainBarX = ToolbarConfig::TOOLBAR_LEFT;
+  float MainBarY = (GetScreenHeight() / 2.0f) + (ToolbarConfig::STATUS_BAR_HEIGHT / 2.0f);
   Bar MainBar(Vector2{MainBarX, MainBarY});
   for (size_t i = 0; i < 11; i++) {
-    auto btn = std::make_unique<Button>(Vector2{0, 0});
+    auto btn = std::make_unique<Button>(Vector2{0, 0}, ToolbarConfig::BUTTON_SIZE, ToolbarConfig::BUTTON_SIZE);
     if (i < icons.Count()) {
       btn->SetIcon(icons.Get(i));
     }
+    if (i < shortcuts.size()) {
+      btn->SetShortcut(shortcuts[i]);
+    }
+    if (i < tooltips.size()) {
+      btn->SetTooltip(tooltips[i]);
+    }
     MainBar.Add(std::move(btn));
   }
+  // Center toolbar within canvas area below top status bar
+  MainBarY = (GetScreenHeight() / 2.0f) + (ToolbarConfig::STATUS_BAR_HEIGHT / 2.0f) - (MainBar.GetDimension().y / 2.0f);
+  MainBar.SetPosition(Vector2{MainBarX, MainBarY});
+
   MainBar.ChangePressed(2); // rectangle highlighted by default
   std::unique_ptr<Stroke> activeStroke;
   while (!WindowShouldClose()) {
+    // Keep toolbar vertically centered in canvas area if window resized
+    float targetBarY = (GetScreenHeight() / 2.0f) + (ToolbarConfig::STATUS_BAR_HEIGHT / 2.0f) - (MainBar.GetDimension().y / 2.0f);
+    if (MainBar.GetOrigin().y != targetBarY || MainBar.GetOrigin().x != ToolbarConfig::TOOLBAR_LEFT) {
+      MainBar.SetPosition(Vector2{ToolbarConfig::TOOLBAR_LEFT, targetBarY});
+    }
+
     Vector2 mouse = GetMousePosition();
     if (!dragging) { // don't switch tools mid-drag
       if (IsKeyPressed(KEY_H))
