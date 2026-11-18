@@ -12,3 +12,15 @@ void BoundedShape::SetCorners(Vector2 a, Vector2 b) {
 bool BoundedShape::Contains(Vector2 p) const {
   return CheckCollisionPointRec(p, bound);
 }
+Rectangle BoundedShape::GetBounds() const {
+  Rectangle r = bound;
+  if (r.width < 0) {
+    r.x += r.width;
+    r.width = -r.width;
+  }
+  if (r.height < 0) {
+    r.y += r.height;
+    r.height = -r.height;
+  }
+  return r;
+}

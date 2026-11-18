@@ -8,7 +8,12 @@ public:
   void Add(std::unique_ptr<Shape> s);
   void Draw() const;
   Shape *PickAt(Vector2 p) const;
+  bool IsSelected(Shape *s) const;
+  void DrawBoundaries() const;
+  void SetSelected(Vector2 p, bool SHiftLogic);
+  void ClearSelected();
 
 private:
   std::vector<std::unique_ptr<Shape>> shapes;
+  std::vector<Shape *> selected;
 };

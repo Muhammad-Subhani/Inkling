@@ -16,3 +16,21 @@ bool Stroke::Contains(Vector2 p) const {
   }
   return false;
 }
+
+Rectangle Stroke::GetBounds() const {
+  if (points.empty())
+    return {0, 0, 0, 0};
+  float minX = points[0].x, maxX = points[0].x;
+  float minY = points[0].y, maxY = points[0].y;
+  for (const Vector2 &p : points) {
+    if (p.x < minX)
+      minX = p.x;
+    if (p.x > maxX)
+      maxX = p.x;
+    if (p.y < minY)
+      minY = p.y;
+    if (p.y > maxY)
+      maxY = p.y;
+  }
+  return {minX, minY, maxX - minX, maxY - minY};
+}

@@ -8,6 +8,8 @@ public:
   void Draw() const override;
   bool Contains(Vector2 p) const override;
 
+  Rectangle GetBounds() const override;
+
 private:
   std::vector<Vector2> points;
   Color color = WHITE;

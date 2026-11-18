@@ -82,7 +82,7 @@ int main() {
         MainBar.ChangePressed(TOOL_RECT);
       if (IsKeyPressed(KEY_D))
         MainBar.ChangePressed(TOOL_DIAMOND);
-      if (IsKeyPressed(KEY_E))
+      if (IsKeyPressed(KEY_O))
         MainBar.ChangePressed(TOOL_ELLIPSE);
       if (IsKeyPressed(KEY_A))
         MainBar.ChangePressed(TOOL_ARROW);
@@ -93,7 +93,11 @@ int main() {
       if (IsKeyPressed(KEY_T))
         MainBar.ChangePressed(TOOL_TEXT);
     }
-
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+        MainBar.GetPressed() == TOOL_SELECT) {
+      bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
+      canvas.SetSelected(GetMousePosition(), shift);
+    }
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       Shape *Clicked = canvas.PickAt(GetMousePosition());
       if (Clicked)
@@ -137,6 +141,7 @@ int main() {
     MainBar.UpdateState(mouse);
     MainBar.Draw();
     canvas.Draw();
+    canvas.DrawBoundaries();
     if (activeStroke)
       activeStroke->Draw();
     if (dragging)

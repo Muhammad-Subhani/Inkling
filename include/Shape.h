@@ -12,6 +12,7 @@ public:
   virtual void Draw() const = 0;
   int GetId() const { return _id; };
   virtual bool Contains(Vector2 p) const = 0;
+  virtual Rectangle GetBounds() const = 0;
 
 protected:
   Shape();
