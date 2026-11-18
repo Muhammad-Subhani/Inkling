@@ -6,6 +6,7 @@ class Stroke : public Shape {
 public:
   void AddPoint(Vector2 p);
   void Draw() const override;
+  bool Contains(Vector2 p) const override;
 
 private:
   std::vector<Vector2> points;

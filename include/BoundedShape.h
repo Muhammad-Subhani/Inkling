@@ -8,4 +8,5 @@ public:
 
 protected:
   Rectangle bound;
+  bool Contains(Vector2 p) const override;
 };

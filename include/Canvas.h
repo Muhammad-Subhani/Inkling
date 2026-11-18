@@ -7,6 +7,7 @@ class Canvas {
 public:
   void Add(std::unique_ptr<Shape> s);
   void Draw() const;
+  Shape *PickAt(Vector2 p) const;
 
 private:
   std::vector<std::unique_ptr<Shape>> shapes;

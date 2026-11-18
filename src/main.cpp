@@ -22,12 +22,12 @@ int main() {
                "assets/icons/text.png", "assets/icons/twinkle.png",
                "assets/icons/eraser.png"});
 
-  const std::vector<const char *> shortcuts = {
-      "H", "V", "R", "D", "O", "A", "L", "P", "T", "K", "E"};
+  const std::vector<const char *> shortcuts = {"H", "V", "R", "D", "O", "A",
+                                               "L", "P", "T", "K", "E"};
   const std::vector<const char *> tooltips = {
-      "Hand - H", "Select - V", "Rectangle - R", "Diamond - D",
-      "Ellipse - O", "Arrow - A", "Line - L", "Draw - P",
-      "Text - T", "Magic wand - K", "Eraser - E"};
+      "Hand - H",    "Select - V",     "Rectangle - R", "Diamond - D",
+      "Ellipse - O", "Arrow - A",      "Line - L",      "Draw - P",
+      "Text - T",    "Magic wand - K", "Eraser - E"};
 
   Canvas canvas;
   ShapeType current = ShapeType::Rect;
@@ -39,7 +39,9 @@ int main() {
   float MainBarY = canvasTop + (canvasHeight - 560.0f) / 2.0f;
   Bar MainBar(Vector2{MainBarX, MainBarY});
   for (size_t i = 0; i < 11; i++) {
-    auto btn = std::make_unique<Button>(Vector2{0, 0}, ToolbarConfig::TOOL_BTN_SIZE, ToolbarConfig::TOOL_BTN_SIZE);
+    auto btn =
+        std::make_unique<Button>(Vector2{0, 0}, ToolbarConfig::TOOL_BTN_SIZE,
+                                 ToolbarConfig::TOOL_BTN_SIZE);
     if (i < icons.Count()) {
       btn->SetIcon(icons.Get(i));
     }
@@ -51,18 +53,22 @@ int main() {
     }
     MainBar.Add(std::move(btn));
   }
-  // Center toolbar within visible canvas area (top: 50%; transform: translateY(-50%), adjusted for any top bar)
+  // Center toolbar within visible canvas area (top: 50%; transform:
+  // translateY(-50%), adjusted for any top bar)
   MainBarY = canvasTop + (canvasHeight - MainBar.GetDimension().y) / 2.0f;
   MainBar.SetPosition(Vector2{MainBarX, MainBarY});
 
   MainBar.ChangePressed(2); // rectangle highlighted by default
   std::unique_ptr<Stroke> activeStroke;
   while (!WindowShouldClose()) {
-    // Keep toolbar vertically centered in visible canvas area when window is resized
+    // Keep toolbar vertically centered in visible canvas area when window is
+    // resized
     float currentCanvasTop = ToolbarConfig::TOP_BAR_HEIGHT;
     float currentCanvasHeight = (float)GetScreenHeight() - currentCanvasTop;
-    float targetBarY = currentCanvasTop + (currentCanvasHeight - MainBar.GetDimension().y) / 2.0f;
-    if (MainBar.GetOrigin().y != targetBarY || MainBar.GetOrigin().x != ToolbarConfig::TOOLBAR_LEFT) {
+    float targetBarY = currentCanvasTop +
+                       (currentCanvasHeight - MainBar.GetDimension().y) / 2.0f;
+    if (MainBar.GetOrigin().y != targetBarY ||
+        MainBar.GetOrigin().x != ToolbarConfig::TOOLBAR_LEFT) {
       MainBar.SetPosition(Vector2{ToolbarConfig::TOOLBAR_LEFT, targetBarY});
     }
 
@@ -89,6 +95,11 @@ int main() {
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      Shape *Clicked = canvas.PickAt(GetMousePosition());
+      if (Clicked)
+        TraceLog(LOG_INFO, "HIT");
+      else
+        TraceLog(LOG_INFO, "EMPty space ");
       // remeber the distinction
       // if there is a click on the bar its the status change
       // when not then it means the things getting drawn
