@@ -7,7 +7,7 @@
 Bar::Bar(Vector2 pos, float width, float height)
     : BoundedShape(pos, Vector2{pos.x + width, pos.y + height}) {
   roundness = ToolbarConfig::TOOLBAR_RADIUS /
-              ((2 * ToolbarConfig::TOOLBAR_PADDING + ToolbarConfig::BUTTON_SIZE) / 2.0f);
+              ((2 * ToolbarConfig::TOOLBAR_PADDING + ToolbarConfig::TOOL_BTN_SIZE) / 2.0f);
 }
 
 void Bar::Draw() const {

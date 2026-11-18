@@ -1,4 +1,5 @@
 #include "../include/Button.h"
+#include "../include/Bar.h"
 #include <algorithm>
 #include <raylib.h>
 
@@ -15,7 +16,7 @@ static Color LerpColor(Color a, Color b, float t) {
 
 Button::Button(Vector2 pos, float width, float height)
     : BoundedShape(pos, Vector2{pos.x + width, pos.y + height}) {
-  roundness = 8.0f / (width / 2.0f);
+  roundness = ToolbarConfig::TOOL_BTN_RADIUS / (width / 2.0f);
 }
 
 void Button::Draw() const {
@@ -35,7 +36,7 @@ void Button::Draw() const {
     DrawRectangleRounded(bound, roundness, segment, currentBg);
   }
 
-  // Draw 20px x 20px icon centered in 36px x 36px button
+  // Draw 22px icon centered in button, translated up by 2px (translateY(-2px)) to guarantee no collision with label
   if (icon.id != 0) {
     Color currentIconColor = iconIdleColor;
     if (activeProgress > 0.0f) {
@@ -44,18 +45,18 @@ void Button::Draw() const {
       currentIconColor = LerpColor(iconIdleColor, iconHoverColor, hoverProgress);
     }
 
-    float iconSize = 20.0f;
+    float iconSize = ToolbarConfig::TOOL_ICON_SIZE;
     Rectangle source = {0.0f, 0.0f, (float)icon.width, (float)icon.height};
     Rectangle dest = {
       bound.x + (bound.width - iconSize) / 2.0f,
-      bound.y + (bound.height - iconSize) / 2.0f,
+      bound.y + (bound.height - iconSize) / 2.0f + ToolbarConfig::TOOL_ICON_OFFSET_Y,
       iconSize,
       iconSize
     };
     DrawTexturePro(icon, source, dest, Vector2{0.0f, 0.0f}, 0.0f, currentIconColor);
   }
 
-  // Draw shortcut label at bottom 2px, right 4px inside button
+  // Draw shortcut label positioned absolute at bottom: 3px; right: 5px
   if (!shortcut.empty()) {
     Color currentTextColor = textIdleColor;
     if (activeProgress > 0.0f) {
@@ -64,10 +65,10 @@ void Button::Draw() const {
       currentTextColor = LerpColor(textIdleColor, textHoverColor, hoverProgress);
     }
 
-    int fontSize = 10;
+    int fontSize = (int)ToolbarConfig::TOOL_LABEL_SIZE;
     int textW = MeasureText(shortcut.c_str(), fontSize);
-    int tx = (int)(bound.x + bound.width - textW - 4.0f);
-    int ty = (int)(bound.y + bound.height - fontSize - 2.0f);
+    int tx = (int)(bound.x + bound.width - textW - ToolbarConfig::TOOL_LABEL_RIGHT);
+    int ty = (int)(bound.y + bound.height - fontSize - ToolbarConfig::TOOL_LABEL_BOTTOM);
     DrawText(shortcut.c_str(), tx, ty, fontSize, currentTextColor);
   }
 }
@@ -77,7 +78,7 @@ void Button::isHovered(Vector2 mousePos) {
 
   float dt = GetFrameTime();
   if (dt <= 0.0f || dt > 0.1f) dt = 1.0f / 60.0f;
-  float speed = dt / 0.120f; // 120ms transition duration
+  float speed = dt / ToolbarConfig::TRANSITION_TIME; // 120ms transition duration
 
   if (onHover)
     hoverProgress = std::min(1.0f, hoverProgress + speed);

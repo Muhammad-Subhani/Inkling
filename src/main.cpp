@@ -34,10 +34,12 @@ int main() {
   Vector2 origin{};
   bool dragging = false;
   float MainBarX = ToolbarConfig::TOOLBAR_LEFT;
-  float MainBarY = (GetScreenHeight() / 2.0f) + (ToolbarConfig::STATUS_BAR_HEIGHT / 2.0f);
+  float canvasTop = ToolbarConfig::TOP_BAR_HEIGHT;
+  float canvasHeight = (float)GetScreenHeight() - canvasTop;
+  float MainBarY = canvasTop + (canvasHeight - 560.0f) / 2.0f;
   Bar MainBar(Vector2{MainBarX, MainBarY});
   for (size_t i = 0; i < 11; i++) {
-    auto btn = std::make_unique<Button>(Vector2{0, 0}, ToolbarConfig::BUTTON_SIZE, ToolbarConfig::BUTTON_SIZE);
+    auto btn = std::make_unique<Button>(Vector2{0, 0}, ToolbarConfig::TOOL_BTN_SIZE, ToolbarConfig::TOOL_BTN_SIZE);
     if (i < icons.Count()) {
       btn->SetIcon(icons.Get(i));
     }
@@ -49,15 +51,17 @@ int main() {
     }
     MainBar.Add(std::move(btn));
   }
-  // Center toolbar within canvas area below top status bar
-  MainBarY = (GetScreenHeight() / 2.0f) + (ToolbarConfig::STATUS_BAR_HEIGHT / 2.0f) - (MainBar.GetDimension().y / 2.0f);
+  // Center toolbar within visible canvas area (top: 50%; transform: translateY(-50%), adjusted for any top bar)
+  MainBarY = canvasTop + (canvasHeight - MainBar.GetDimension().y) / 2.0f;
   MainBar.SetPosition(Vector2{MainBarX, MainBarY});
 
   MainBar.ChangePressed(2); // rectangle highlighted by default
   std::unique_ptr<Stroke> activeStroke;
   while (!WindowShouldClose()) {
-    // Keep toolbar vertically centered in canvas area if window resized
-    float targetBarY = (GetScreenHeight() / 2.0f) + (ToolbarConfig::STATUS_BAR_HEIGHT / 2.0f) - (MainBar.GetDimension().y / 2.0f);
+    // Keep toolbar vertically centered in visible canvas area when window is resized
+    float currentCanvasTop = ToolbarConfig::TOP_BAR_HEIGHT;
+    float currentCanvasHeight = (float)GetScreenHeight() - currentCanvasTop;
+    float targetBarY = currentCanvasTop + (currentCanvasHeight - MainBar.GetDimension().y) / 2.0f;
     if (MainBar.GetOrigin().y != targetBarY || MainBar.GetOrigin().x != ToolbarConfig::TOOLBAR_LEFT) {
       MainBar.SetPosition(Vector2{ToolbarConfig::TOOLBAR_LEFT, targetBarY});
     }
@@ -89,7 +93,7 @@ int main() {
       // if there is a click on the bar its the status change
       // when not then it means the things getting drawn
       bool inBar =
-          (mouse.x >= 0 &&
+          (mouse.x >= MainBar.GetOrigin().x &&
            mouse.x <= MainBar.GetOrigin().x + MainBar.GetDimension().x &&
            mouse.y >= MainBar.GetOrigin().y &&
            mouse.y <= MainBar.GetOrigin().y + MainBar.GetDimension().y);
