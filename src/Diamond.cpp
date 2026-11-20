@@ -22,3 +22,10 @@ bool Diamond::Contains(Vector2 p) const {
   float dy = std::fabsf(p.y - (bound.y + radiiY)) / radiiY;
   return dx + dy <= 1.0;
 }
+bool Diamond::ClickedInBody(Vector2 p) const {
+  float radiiX = bound.width / 2.0;
+  float radiiY = bound.height / 2.0;
+  float dx = std::fabsf(p.x - (bound.x + radiiX)) / radiiX;
+  float dy = std::fabsf(p.y - (bound.y + radiiY)) / radiiY;
+  return dx + dy < 1.0;
+}

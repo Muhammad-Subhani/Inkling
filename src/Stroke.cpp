@@ -1,5 +1,6 @@
 #include "../include/Stroke.h"
 #include <cstddef>
+#include <iostream>
 #include <raylib.h>
 void Stroke::AddPoint(Vector2 p) { points.push_back(p); }
 void Stroke::Draw() const {
@@ -33,4 +34,21 @@ Rectangle Stroke::GetBounds() const {
       maxY = p.y;
   }
   return {minX, minY, maxX - minX, maxY - minY};
+}
+bool Stroke::ClickedInBody(Vector2 p) const {
+  // Rectangle temp = GetBounds();
+  // return (p.x > temp.x && p.x < temp.x + temp.width && p.y > temp.y &&
+  //         p.y < temp.y + temp.height);
+  return Contains(p);
+}
+void Stroke::MoveElement(Vector2 p) {
+  Rectangle temp = GetBounds();
+  // one thing to make sure that you are not using auto here
+  // auto makes the copy so you are actusally not changing the actaull point use
+  // referenece
+  for (Vector2 &point : points) {
+    Vector2 diff = {point.x - temp.x, point.y - temp.y};
+    point.x = p.x + diff.x;
+    point.y = p.y + diff.y;
+  }
 }

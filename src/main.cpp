@@ -6,6 +6,7 @@
 #include "../include/Stroke.h"
 #include "../include/Tool.h"
 #include "../include/window.h"
+#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <raylib.h>
@@ -60,6 +61,11 @@ int main() {
 
   MainBar.ChangePressed(2); // rectangle highlighted by default
   std::unique_ptr<Stroke> activeStroke;
+  Vector2 pivot;
+  // this status is helping to move the slected Shape
+  bool DragForMOve = false;
+  Shape *Clicked;
+  Vector2 prev;
   while (!WindowShouldClose()) {
     // Keep toolbar vertically centered in visible canvas area when window is
     // resized
@@ -92,18 +98,48 @@ int main() {
         MainBar.ChangePressed(TOOL_PENCIL);
       if (IsKeyPressed(KEY_T))
         MainBar.ChangePressed(TOOL_TEXT);
+      if (IsKeyPressed(KEY_H) || IsKeyPressed(KEY_V) || IsKeyPressed(KEY_R) ||
+          IsKeyPressed(KEY_D) || IsKeyPressed(KEY_O) || IsKeyPressed(KEY_A) ||
+          IsKeyPressed(KEY_L) || IsKeyPressed(KEY_P) || IsKeyPressed(KEY_T)) {
+        canvas.ClearSelected();
+        DragForMOve = false;
+      }
     }
+    // for selecting any shape
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
         MainBar.GetPressed() == TOOL_SELECT) {
       bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
       canvas.SetSelected(GetMousePosition(), shift);
     }
+    // setting the pivot  the selected shape in order to move it
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+        MainBar.GetPressed() == TOOL_SELECT) {
+      Clicked = canvas.BodyClickedCheck(GetMousePosition());
+      if (!Clicked) {
+        pivot = {0, 0};
+        prev = {0, 0};
+        DragForMOve = false;
+      } else {
+        pivot = {GetMousePosition().x - Clicked->GetBounds().x,
+                 GetMousePosition().y - Clicked->GetBounds().y};
+        DragForMOve = true;
+      }
+    }
+    // moving the slected shape through dragging
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && DragForMOve) {
+      Vector2 mouse = GetMousePosition();
+      if (mouse.x != prev.x || mouse.y != prev.y) {
+        prev = mouse;
+        Clicked->MoveElement({mouse.x - pivot.x, mouse.y - pivot.y});
+      }
+    }
+
+    // checks three things
+    // if the click is under the bar it means youve tried to change the tool
+    // you are trying to draw a thing so set the origin
+    // you are using the pencil .. so make the empty stroke object
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-      Shape *Clicked = canvas.PickAt(GetMousePosition());
-      if (Clicked)
-        TraceLog(LOG_INFO, "HIT");
-      else
-        TraceLog(LOG_INFO, "EMPty space ");
+      // the element which is clicked just now is it already selected or not ?
       // remeber the distinction
       // if there is a click on the bar its the status change
       // when not then it means the things getting drawn
@@ -114,6 +150,8 @@ int main() {
            mouse.y <= MainBar.GetOrigin().y + MainBar.GetDimension().y);
       if (inBar) {
         MainBar.SelectAbutton(mouse); // click changes pressed
+        canvas.ClearSelected();
+        DragForMOve = false;
       } else if (MainBar.GetPressed() == TOOL_PENCIL) {
         activeStroke = std::make_unique<Stroke>();
         activeStroke->AddPoint(mouse);
@@ -122,6 +160,7 @@ int main() {
         dragging = true;
       }
     }
+    // adding the stroke in the canvas array
     if (activeStroke && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
       activeStroke->AddPoint(mouse);
 

@@ -14,3 +14,10 @@ bool Ellipse::Contains(Vector2 p) const {
   float dy = (p.y - (bound.y + radiiY)) / radiiY;
   return dx * dx + dy * dy <= 1.0;
 }
+bool Ellipse::ClickedInBody(Vector2 p) const {
+  float radiiX = bound.width / 2;
+  float radiiY = bound.height / 2;
+  float dx = (p.x - (bound.x + radiiX)) / radiiX;
+  float dy = (p.y - (bound.y + radiiY)) / radiiY;
+  return dx * dx + dy * dy < 1.0;
+}

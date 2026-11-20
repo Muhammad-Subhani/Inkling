@@ -13,6 +13,13 @@ Shape *Canvas::PickAt(Vector2 p) const {
   }
   return nullptr;
 }
+Shape *Canvas::BodyClickedCheck(Vector2 p) const {
+  for (auto &x : shapes) {
+    if (x->ClickedInBody(p))
+      return x.get();
+  }
+  return nullptr;
+}
 bool Canvas::IsSelected(Shape *s) const {
   // the end is not the last element its the one past the last element
   // so end () is returned when the find didnt get your shape

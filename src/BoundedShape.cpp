@@ -24,3 +24,11 @@ Rectangle BoundedShape::GetBounds() const {
   }
   return r;
 }
+bool BoundedShape::ClickedInBody(Vector2 p) const {
+  return (p.x > bound.x && p.x < bound.x + bound.width && p.y > bound.y &&
+          p.y < bound.y + bound.height);
+}
+void BoundedShape::MoveElement(Vector2 p) {
+  bound.x = p.x;
+  bound.y = p.y;
+}

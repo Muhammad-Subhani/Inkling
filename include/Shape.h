@@ -13,6 +13,8 @@ public:
   int GetId() const { return _id; };
   virtual bool Contains(Vector2 p) const = 0;
   virtual Rectangle GetBounds() const = 0;
+  virtual bool ClickedInBody(Vector2 p) const = 0;
+  virtual void MoveElement(Vector2 p) = 0;
 
 protected:
   Shape();

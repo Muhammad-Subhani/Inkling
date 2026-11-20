@@ -12,6 +12,7 @@ public:
   void DrawBoundaries() const;
   void SetSelected(Vector2 p, bool SHiftLogic);
   void ClearSelected();
+  Shape *BodyClickedCheck(Vector2 p) const;
 
 private:
   std::vector<std::unique_ptr<Shape>> shapes;

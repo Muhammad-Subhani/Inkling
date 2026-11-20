@@ -7,11 +7,13 @@ public:
   void AddPoint(Vector2 p);
   void Draw() const override;
   bool Contains(Vector2 p) const override;
-
+  bool ClickedInBody(Vector2 p) const override;
   Rectangle GetBounds() const override;
+  void MoveElement(Vector2 p) override;
 
 private:
   std::vector<Vector2> points;
   Color color = WHITE;
   float thickness = 2;
+  Rectangle Bound;
 };

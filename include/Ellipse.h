@@ -6,4 +6,5 @@ public:
   using BoundedShape::BoundedShape;
   void Draw() const override;
   bool Contains(Vector2 p) const override;
+  bool ClickedInBody(Vector2 p) const override;
 };
