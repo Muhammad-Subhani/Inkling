@@ -1,6 +1,8 @@
 #include "../include/Canvas.h"
 #include <algorithm>
 #include <raylib.h>
+#include <utility>
+#include <vector>
 void Canvas::Add(std::unique_ptr<Shape> s) { shapes.push_back(std::move(s)); }
 void Canvas::Draw() const {
   for (const auto &s : shapes)
@@ -26,8 +28,19 @@ bool Canvas::IsSelected(Shape *s) const {
   // and this check is what returns either true or false
   return std::find(selected.begin(), selected.end(), s) != selected.end();
 }
+bool CheckMouseINBigSelection(Vector2 p, Rectangle temp) {
+  return (p.x >= temp.x && p.x <= temp.x + temp.width && p.y >= temp.y &&
+          p.y <= temp.y + temp.height);
+}
 void Canvas::ClearSelected() { selected.clear(); }
 void Canvas::SetSelected(Vector2 p, bool ShiftLogic) {
+  // cheking for multiple selections
+  if (selected.size() > 1) {
+    if (!CheckMouseINBigSelection(p, GetWholeARect()))
+      ClearSelected();
+    else
+      return;
+  }
   Shape *hitted = PickAt(p);
   if (!hitted) {
     if (!ShiftLogic)
@@ -45,6 +58,23 @@ void Canvas::SetSelected(Vector2 p, bool ShiftLogic) {
     selected.push_back(hitted);
   }
 }
+Rectangle Canvas::GetWholeARect() const {
+  float minX = selected[0]->GetBounds().x;
+  float maxX = selected[0]->GetBounds().x + selected[0]->GetBounds().width;
+  float minY = selected[0]->GetBounds().y;
+  float maxY = selected[0]->GetBounds().y + selected[0]->GetBounds().height;
+  for (auto &x : selected) {
+    if (x->GetBounds().x + x->GetBounds().width > maxX)
+      maxX = x->GetBounds().x + x->GetBounds().width;
+    if (x->GetBounds().x < minX)
+      minX = x->GetBounds().x;
+    if (x->GetBounds().y + x->GetBounds().height > maxY)
+      maxY = x->GetBounds().y + x->GetBounds().height;
+    if (x->GetBounds().y < minY)
+      minY = x->GetBounds().y;
+  }
+  return {minX, minY, maxX - minX, maxY - minY};
+}
 void Canvas::DrawBoundaries() const {
   const Color SEL = {150, 145, 255, 255}; // Excalidraw-ish violet
   const float PAD = 6.0f;
@@ -54,4 +84,39 @@ void Canvas::DrawBoundaries() const {
                      b.height + 2 * PAD};
     DrawRectangleLinesEx(box, 1.5f, SEL);
   }
+  // if there are more than one elements copied we need a rectangle upon them ;
+  if (selected.size() > 1) {
+    Rectangle BigRect = GetWholeARect();
+    BigRect = {BigRect.x - PAD, BigRect.y - PAD, BigRect.width + 2 * PAD,
+               BigRect.height + 2 * PAD};
+    DrawRectangleLinesEx(BigRect, 1.5f, SEL);
+  }
+}
+void Canvas::CheckForEnclosingShapes(Rectangle temp) {
+  for (auto &x : shapes) {
+    Rectangle shapeBounds = x->GetBounds();
+    if (temp.x <= shapeBounds.x &&
+        temp.x + temp.width >= shapeBounds.width + shapeBounds.x &&
+        temp.y <= shapeBounds.y &&
+        temp.height + temp.y >= shapeBounds.height + shapeBounds.y)
+      selected.push_back(x.get());
+  }
+}
+void Canvas::MoveAllSelectedTogether(Vector2 p) {
+  std::vector<Vector2> locs = LocationOfEachElementInbounds();
+  int x = 0;
+  for (auto &s : selected) {
+    Vector2 newPos = {p.x + locs[x].x, p.y + locs[x].y};
+    s->MoveElement(newPos);
+    x++;
+  }
+}
+std::vector<Vector2> Canvas::LocationOfEachElementInbounds() {
+  std::vector<Vector2> ans;
+  Rectangle temp = GetWholeARect();
+  for (auto &s : selected) {
+    ans.push_back(
+        Vector2{s->GetBounds().x - temp.x, s->GetBounds().y - temp.y});
+  }
+  return ans;
 }

@@ -1,5 +1,9 @@
 #pragma once
+#include "RectangleShape.h"
 #include "Shape.h"
+#include "ShapeFactory.h"
+#include <algorithm>
+#include <cmath>
 #include <memory>
 #include <raylib.h>
 #include <vector>
@@ -13,6 +17,11 @@ public:
   void SetSelected(Vector2 p, bool SHiftLogic);
   void ClearSelected();
   Shape *BodyClickedCheck(Vector2 p) const;
+  void CheckForEnclosingShapes(Rectangle temp);
+  Rectangle GetWholeARect() const;
+  int GetSizeOfselected() const { return selected.size(); }
+  void MoveAllSelectedTogether(Vector2 p);
+  std::vector<Vector2> LocationOfEachElementInbounds();
 
 private:
   std::vector<std::unique_ptr<Shape>> shapes;

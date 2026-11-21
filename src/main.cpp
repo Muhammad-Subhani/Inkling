@@ -6,7 +6,6 @@
 #include "../include/Stroke.h"
 #include "../include/Tool.h"
 #include "../include/window.h"
-#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <raylib.h>
@@ -62,6 +61,8 @@ int main() {
   MainBar.ChangePressed(2); // rectangle highlighted by default
   std::unique_ptr<Stroke> activeStroke;
   Vector2 pivot;
+  // pivots when more than on shape is selected
+  // std::vector<Vector2> allPivots;
   // this status is helping to move the slected Shape
   bool DragForMOve = false;
   Shape *Clicked;
@@ -115,13 +116,17 @@ int main() {
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
         MainBar.GetPressed() == TOOL_SELECT) {
       Clicked = canvas.BodyClickedCheck(GetMousePosition());
-      if (!Clicked) {
+      if (!Clicked && canvas.GetSizeOfselected() == 0) {
         pivot = {0, 0};
         prev = {0, 0};
         DragForMOve = false;
-      } else {
+      } else if (canvas.GetSizeOfselected() == 1) {
         pivot = {GetMousePosition().x - Clicked->GetBounds().x,
                  GetMousePosition().y - Clicked->GetBounds().y};
+        DragForMOve = true;
+      } else if (canvas.GetSizeOfselected() > 1) {
+        Rectangle temp = canvas.GetWholeARect();
+        pivot = {mouse.x - temp.x, mouse.y - temp.y};
         DragForMOve = true;
       }
     }
@@ -130,7 +135,11 @@ int main() {
       Vector2 mouse = GetMousePosition();
       if (mouse.x != prev.x || mouse.y != prev.y) {
         prev = mouse;
-        Clicked->MoveElement({mouse.x - pivot.x, mouse.y - pivot.y});
+        if (canvas.GetSizeOfselected() > 1) {
+          canvas.MoveAllSelectedTogether(
+              {mouse.x - pivot.x, mouse.y - pivot.y});
+        } else
+          Clicked->MoveElement({mouse.x - pivot.x, mouse.y - pivot.y});
       }
     }
 
@@ -171,7 +180,8 @@ int main() {
         canvas.Add(std::move(activeStroke));
     }
     if (dragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-      canvas.Add(MakeShape(current, origin, mouse));
+      if (MainBar.GetPressed() != TOOL_SELECT)
+        canvas.Add(MakeShape(current, origin, mouse));
       dragging = false;
     }
 
@@ -183,8 +193,13 @@ int main() {
     canvas.DrawBoundaries();
     if (activeStroke)
       activeStroke->Draw();
-    if (dragging)
+    if (dragging && !DragForMOve) {
+      if (MainBar.GetPressed() == TOOL_SELECT) {
+        Rectangle fresh = MakeShape(current, origin, mouse)->GetBounds();
+        canvas.CheckForEnclosingShapes(fresh);
+      }
       MakeShape(current, origin, mouse)->Draw(); // live preview
+    }
     EndDrawing();
   }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <raylib.h>
+#include <type_traits>
 
 class Shape {
 public:

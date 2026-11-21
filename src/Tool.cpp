@@ -11,6 +11,10 @@ bool ToolToShape(int tool, ShapeType &out) {
   case TOOL_DIAMOND:
     out = ShapeType::Diamond;
     return true;
+  case TOOL_SELECT:
+    out = ShapeType::SelectionMarquee;
+    return true;
   }
+
   return false; // hand, select, arrow, etc. aren't shapes yet
 }
