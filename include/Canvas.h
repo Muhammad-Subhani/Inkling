@@ -13,7 +13,7 @@ public:
   void Draw() const;
   Shape *PickAt(Vector2 p) const;
   bool IsSelected(Shape *s) const;
-  void DrawBoundaries() const;
+  void DrawBoundaries(float zoom) const;
   void SetSelected(Vector2 p, bool SHiftLogic);
   void ClearSelected();
   Shape *BodyClickedCheck(Vector2 p) const;

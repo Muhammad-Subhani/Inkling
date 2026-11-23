@@ -6,6 +6,8 @@
 #include "../include/Stroke.h"
 #include "../include/Tool.h"
 #include "../include/window.h"
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <raylib.h>
@@ -30,6 +32,11 @@ int main() {
       "Text - T",    "Magic wand - K", "Eraser - E"};
 
   Canvas canvas;
+  Vector2 Camera_Target = {0, 0};
+  Camera2D camera{
+      {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}, Camera_Target, 0, 1};
+  float MIN_ZOOM = 0.52f;
+  float MAX_ZOOM = 10.0f;
   ShapeType current = ShapeType::Rect;
   Vector2 origin{};
   bool dragging = false;
@@ -60,14 +67,38 @@ int main() {
 
   MainBar.ChangePressed(2); // rectangle highlighted by default
   std::unique_ptr<Stroke> activeStroke;
-  Vector2 pivot;
+  Vector2 pivot{};
   // pivots when more than on shape is selected
   // std::vector<Vector2> allPivots;
   // this status is helping to move the slected Shape
   bool DragForMOve = false;
-  Shape *Clicked;
-  Vector2 prev;
+  Shape *Clicked = nullptr;
+  Vector2 prev{};
+  float Zoom = 1;
+  Vector2 Pivot_Canvas = {0, 0};
   while (!WindowShouldClose()) {
+
+    // this part of code checks the zoom if applied else remains in 0.52--10
+    camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+    if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
+      float MouseWheelTicks = GetMouseWheelMove();
+      Zoom *= std::powf(1.1f, MouseWheelTicks);
+      Zoom = std::clamp(Zoom, MIN_ZOOM, MAX_ZOOM);
+    }
+    camera.zoom = Zoom;
+    // moving vertically
+    if (!IsKeyDown(KEY_LEFT_CONTROL) && !IsKeyDown(KEY_RIGHT_CONTROL)) {
+      if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
+        float MouseWheelTicks = GetMouseWheelMove();
+        Camera_Target = {Camera_Target.x + (100 * MouseWheelTicks),
+                         Camera_Target.y};
+      } else if (!IsKeyDown(KEY_LEFT_SHIFT) && !IsKeyDown(KEY_RIGHT_SHIFT)) {
+        float MouseWheelTicks = GetMouseWheelMove();
+        Camera_Target = {Camera_Target.x,
+                         Camera_Target.y + (100 * MouseWheelTicks * -1)};
+      }
+    }
+
     // Keep toolbar vertically centered in visible canvas area when window is
     // resized
     float currentCanvasTop = ToolbarConfig::TOP_BAR_HEIGHT;
@@ -78,8 +109,10 @@ int main() {
         MainBar.GetOrigin().x != ToolbarConfig::TOOLBAR_LEFT) {
       MainBar.SetPosition(Vector2{ToolbarConfig::TOOLBAR_LEFT, targetBarY});
     }
-
+    // this is the mouse for the screen
     Vector2 mouse = GetMousePosition();
+    // this is the mouse coords needed for the actual infiinte world
+    Vector2 WorldMouse = GetScreenToWorld2D(mouse, camera);
     if (!dragging) { // don't switch tools mid-drag
       if (IsKeyPressed(KEY_H))
         MainBar.ChangePressed(TOOL_HAND);
@@ -104,42 +137,8 @@ int main() {
           IsKeyPressed(KEY_L) || IsKeyPressed(KEY_P) || IsKeyPressed(KEY_T)) {
         canvas.ClearSelected();
         DragForMOve = false;
-      }
-    }
-    // for selecting any shape
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-        MainBar.GetPressed() == TOOL_SELECT) {
-      bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
-      canvas.SetSelected(GetMousePosition(), shift);
-    }
-    // setting the pivot  the selected shape in order to move it
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-        MainBar.GetPressed() == TOOL_SELECT) {
-      Clicked = canvas.BodyClickedCheck(GetMousePosition());
-      if (!Clicked && canvas.GetSizeOfselected() == 0) {
-        pivot = {0, 0};
-        prev = {0, 0};
-        DragForMOve = false;
-      } else if (canvas.GetSizeOfselected() == 1) {
-        pivot = {GetMousePosition().x - Clicked->GetBounds().x,
-                 GetMousePosition().y - Clicked->GetBounds().y};
-        DragForMOve = true;
-      } else if (canvas.GetSizeOfselected() > 1) {
-        Rectangle temp = canvas.GetWholeARect();
-        pivot = {mouse.x - temp.x, mouse.y - temp.y};
-        DragForMOve = true;
-      }
-    }
-    // moving the slected shape through dragging
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && DragForMOve) {
-      Vector2 mouse = GetMousePosition();
-      if (mouse.x != prev.x || mouse.y != prev.y) {
-        prev = mouse;
-        if (canvas.GetSizeOfselected() > 1) {
-          canvas.MoveAllSelectedTogether(
-              {mouse.x - pivot.x, mouse.y - pivot.y});
-        } else
-          Clicked->MoveElement({mouse.x - pivot.x, mouse.y - pivot.y});
+        if (activeStroke)
+          canvas.Add(std::move(activeStroke));
       }
     }
 
@@ -161,18 +160,77 @@ int main() {
         MainBar.SelectAbutton(mouse); // click changes pressed
         canvas.ClearSelected();
         DragForMOve = false;
-      } else if (MainBar.GetPressed() == TOOL_PENCIL) {
-        activeStroke = std::make_unique<Stroke>();
-        activeStroke->AddPoint(mouse);
-      } else if (ToolToShape(MainBar.GetPressed(), current)) {
-        origin = mouse; // only start a drag for shape tools
-        dragging = true;
+        Clicked = nullptr;
+      } else {
+        if (MainBar.GetPressed() == TOOL_HAND) {
+          Pivot_Canvas = mouse;
+        }
+        // this is a case for pencil stroke
+        if (MainBar.GetPressed() == TOOL_PENCIL) {
+          activeStroke = std::make_unique<Stroke>();
+          activeStroke->AddPoint(WorldMouse);
+        }
+        // this piece of code decides which element will be drawn
+        if (ToolToShape(MainBar.GetPressed(), current)) {
+          origin = WorldMouse; // only start a drag for shape tools
+          dragging = true;
+        }
+        // for selecting any shape
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+            MainBar.GetPressed() == TOOL_SELECT) {
+          bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
+          canvas.SetSelected(WorldMouse, shift);
+          if (canvas.GetSizeOfselected() == 0) {
+            Clicked = nullptr;
+            DragForMOve = false;
+          }
+        }
+        // setting the pivot  the selected shape in order to move it
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+            MainBar.GetPressed() == TOOL_SELECT) {
+          Clicked = canvas.BodyClickedCheck(WorldMouse);
+          if (!Clicked && canvas.GetSizeOfselected() == 0) {
+            pivot = {0, 0};
+            prev = {0, 0};
+            DragForMOve = false;
+            Clicked = nullptr;
+          } else if (Clicked && canvas.GetSizeOfselected() == 1) {
+            pivot = {WorldMouse.x - Clicked->GetBounds().x,
+                     WorldMouse.y - Clicked->GetBounds().y};
+            DragForMOve = true;
+          } else if (canvas.GetSizeOfselected() > 1) {
+            Rectangle temp = canvas.GetWholeARect();
+            pivot = {WorldMouse.x - temp.x, WorldMouse.y - temp.y};
+            DragForMOve = true;
+          }
+        }
       }
     }
+
+    // this portion when the button is being pressed and holded
     // adding the stroke in the canvas array
     if (activeStroke && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-      activeStroke->AddPoint(mouse);
-
+      activeStroke->AddPoint(WorldMouse);
+    // moving the slected shape through dragging
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && DragForMOve) {
+      // Vector2 mouse = GetMousePosition();
+      if (WorldMouse.x != prev.x || WorldMouse.y != prev.y) {
+        prev = WorldMouse;
+        if (canvas.GetSizeOfselected() > 1) {
+          canvas.MoveAllSelectedTogether(
+              {WorldMouse.x - pivot.x, WorldMouse.y - pivot.y});
+        } else
+          Clicked->MoveElement(
+              {WorldMouse.x - pivot.x, WorldMouse.y - pivot.y});
+      }
+    }
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) &&
+        MainBar.GetPressed() == TOOL_HAND) {
+      float Xpos = mouse.x - Pivot_Canvas.x;
+      float Ypos = mouse.y - Pivot_Canvas.y;
+      Camera_Target = {Camera_Target.x - Xpos, Camera_Target.y - Ypos};
+      Pivot_Canvas = mouse;
+    }
     // mouse released
     if (MainBar.GetPressed() == TOOL_PENCIL && activeStroke &&
         IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
@@ -181,25 +239,27 @@ int main() {
     }
     if (dragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
       if (MainBar.GetPressed() != TOOL_SELECT)
-        canvas.Add(MakeShape(current, origin, mouse));
+        canvas.Add(MakeShape(current, origin, WorldMouse));
       dragging = false;
     }
-
+    camera.target = Camera_Target;
     BeginDrawing();
     ClearBackground(BLACK);
-    MainBar.UpdateState(mouse);
-    MainBar.Draw();
+    BeginMode2D(camera);
     canvas.Draw();
-    canvas.DrawBoundaries();
+    canvas.DrawBoundaries(Zoom);
     if (activeStroke)
       activeStroke->Draw();
     if (dragging && !DragForMOve) {
       if (MainBar.GetPressed() == TOOL_SELECT) {
-        Rectangle fresh = MakeShape(current, origin, mouse)->GetBounds();
+        Rectangle fresh = MakeShape(current, origin, WorldMouse)->GetBounds();
         canvas.CheckForEnclosingShapes(fresh);
       }
-      MakeShape(current, origin, mouse)->Draw(); // live preview
+      MakeShape(current, origin, WorldMouse)->Draw(); // live preview
     }
+    EndMode2D();
+    MainBar.UpdateState(mouse);
+    MainBar.Draw();
     EndDrawing();
   }
 

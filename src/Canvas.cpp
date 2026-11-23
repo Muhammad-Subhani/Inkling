@@ -75,14 +75,15 @@ Rectangle Canvas::GetWholeARect() const {
   }
   return {minX, minY, maxX - minX, maxY - minY};
 }
-void Canvas::DrawBoundaries() const {
+void Canvas::DrawBoundaries(float zoom) const {
   const Color SEL = {150, 145, 255, 255}; // Excalidraw-ish violet
-  const float PAD = 6.0f;
+  const float PAD = 6.0f / zoom;
+  float thickness = 1.5f / zoom;
   for (const Shape *s : selected) {
     Rectangle b = s->GetBounds();
     Rectangle box = {b.x - PAD, b.y - PAD, b.width + 2 * PAD,
                      b.height + 2 * PAD};
-    DrawRectangleLinesEx(box, 1.5f, SEL);
+    DrawRectangleLinesEx(box, thickness, SEL);
   }
   // if there are more than one elements copied we need a rectangle upon them ;
   if (selected.size() > 1) {
