@@ -90,7 +90,7 @@ void Canvas::DrawBoundaries(float zoom) const {
     Rectangle BigRect = GetWholeARect();
     BigRect = {BigRect.x - PAD, BigRect.y - PAD, BigRect.width + 2 * PAD,
                BigRect.height + 2 * PAD};
-    DrawRectangleLinesEx(BigRect, 1.5f, SEL);
+    DrawRectangleLinesEx(BigRect, thickness, SEL);
   }
 }
 void Canvas::CheckForEnclosingShapes(Rectangle temp) {

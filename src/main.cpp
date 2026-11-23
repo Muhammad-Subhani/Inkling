@@ -137,6 +137,7 @@ int main() {
           IsKeyPressed(KEY_L) || IsKeyPressed(KEY_P) || IsKeyPressed(KEY_T)) {
         canvas.ClearSelected();
         DragForMOve = false;
+        Pivot_Canvas = mouse;
         if (activeStroke)
           canvas.Add(std::move(activeStroke));
       }
