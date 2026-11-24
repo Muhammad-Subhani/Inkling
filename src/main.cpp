@@ -6,6 +6,7 @@
 #include "../include/Stroke.h"
 #include "../include/Tool.h"
 #include "../include/window.h"
+#include "../include/Twinkle.h"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -66,6 +67,8 @@ int main() {
   MainBar.SetPosition(Vector2{MainBarX, MainBarY});
 
   MainBar.ChangePressed(2); // rectangle highlighted by default
+  Twinkle twinkle;
+  bool isReleased  = 0;
   std::unique_ptr<Stroke> activeStroke;
   Vector2 pivot{};
   // pivots when more than on shape is selected
@@ -82,7 +85,7 @@ int main() {
     camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
     if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
       float MouseWheelTicks = GetMouseWheelMove();
-      Zoom *= std::powf(1.1f, MouseWheelTicks);
+      Zoom *= std::pow(1.1f, MouseWheelTicks);
       Zoom = std::clamp(Zoom, MIN_ZOOM, MAX_ZOOM);
     }
     camera.zoom = Zoom;
@@ -142,6 +145,11 @@ int main() {
           canvas.Add(std::move(activeStroke));
       }
     }
+     bool inBar =
+          (mouse.x >= MainBar.GetOrigin().x &&
+           mouse.x <= MainBar.GetOrigin().x + MainBar.GetDimension().x &&
+           mouse.y >= MainBar.GetOrigin().y &&
+           mouse.y <= MainBar.GetOrigin().y + MainBar.GetDimension().y);
 
     // checks three things
     // if the click is under the bar it means youve tried to change the tool
@@ -152,11 +160,7 @@ int main() {
       // remeber the distinction
       // if there is a click on the bar its the status change
       // when not then it means the things getting drawn
-      bool inBar =
-          (mouse.x >= MainBar.GetOrigin().x &&
-           mouse.x <= MainBar.GetOrigin().x + MainBar.GetDimension().x &&
-           mouse.y >= MainBar.GetOrigin().y &&
-           mouse.y <= MainBar.GetOrigin().y + MainBar.GetDimension().y);
+     
       if (inBar) {
         MainBar.SelectAbutton(mouse); // click changes pressed
         canvas.ClearSelected();
@@ -212,6 +216,28 @@ int main() {
     // adding the stroke in the canvas array
     if (activeStroke && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
       activeStroke->AddPoint(WorldMouse);
+    //For the twinkle
+    if (MainBar.GetPressed() == TOOL_TWINKLE && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+    {
+      if (!inBar)
+      {
+        if (isReleased)//
+        {
+         isReleased = 0; //in state of drawing
+          twinkle.reset();
+        }
+        twinkle.addPoint(WorldMouse);
+        twinkle.Update();
+        
+      }
+      
+    }
+    
+    if (MainBar.GetPressed() == TOOL_TWINKLE && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+    {
+      isReleased = 1;
+    }
+    
     // moving the slected shape through dragging
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && DragForMOve) {
       // Vector2 mouse = GetMousePosition();
@@ -249,6 +275,11 @@ int main() {
     BeginMode2D(camera);
     canvas.Draw();
     canvas.DrawBoundaries(Zoom);
+
+    if(twinkle.notEmpty()){
+      twinkle.Draw();
+    }
+
     if (activeStroke)
       activeStroke->Draw();
     if (dragging && !DragForMOve) {
