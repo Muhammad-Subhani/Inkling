@@ -106,7 +106,7 @@ int main() {
     camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
     if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
       float MouseWheelTicks = GetMouseWheelMove();
-      Zoom *= std::powf(1.1f, MouseWheelTicks);
+      Zoom *= std::pow(1.1f, MouseWheelTicks);
       Zoom = std::clamp(Zoom, MIN_ZOOM, MAX_ZOOM);
     }
     camera.zoom = Zoom;
