@@ -2,10 +2,12 @@
 #include "../include/Button.h"
 #include "../include/Canvas.h"
 #include "../include/Icons.h"
+#include "../include/Logo.h"
 #include "../include/MiniMap.h"
 #include "../include/ShapeFactory.h"
 #include "../include/Stroke.h"
 #include "../include/Tool.h"
+#include "../include/ZoomIndicator.h"
 #include "../include/window.h"
 #include <algorithm>
 #include <cmath>
@@ -18,6 +20,14 @@ Rectangle GetUnionRectangle(Rectangle a, Rectangle b) {
   return {std::min(a.x, b.x), std::min(a.y, b.y),
           std::max(a.x + a.width, b.x + b.width) - std::min(a.x, b.x),
           std::max(a.y + a.height, b.y + b.height) - std::min(a.y, b.y)};
+}
+bool IsPointOverUI(Vector2 point, const Bar &bar, const MiniMap &miniMap,
+                   const Logo &logo, const ZoomIndicator &zoomIndicator) {
+  Rectangle barRect = {bar.GetOrigin().x, bar.GetOrigin().y,
+                       bar.GetDimension().x, bar.GetDimension().y};
+  return CheckCollisionPointRec(point, barRect) ||
+         miniMap.IsPointINMinimap(point) || logo.Contains(point) ||
+         zoomIndicator.Contains(point);
 }
 int main() {
   Color windowColor = {18, 18, 18, 255};
@@ -83,11 +93,13 @@ int main() {
   Vector2 Pivot_Canvas = {0, 0};
   float MiniMap_height = 200.0;
   float MiniMap_width = 250.0;
-  // Rectangle miniWindow = {20, GetScreenHeight() - MiniMap_height - 10,
-  //                         MiniMap_width, MiniMap_height};
-  MiniMap MiniMap({20, GetScreenHeight() - MiniMap_height}, MiniMap_height,
-                  MiniMap_width);
-  Vector2 MiniScreenCoords{0, 0};
+  MiniMap MiniMap(
+      {(float)GetScreenWidth() - MiniMap_width - ToolbarConfig::TOOLBAR_LEFT,
+       ToolbarConfig::TOOLBAR_LEFT},
+      MiniMap_height, MiniMap_width);
+  Logo logo(icons.Get(TOOL_PENCIL));
+  ZoomIndicator zoomIndicator;
+  zoomIndicator.UpdateLayout(Zoom);
   while (!WindowShouldClose()) {
 
     // this part of code checks the zoom if applied else remains in 0.52--10
@@ -110,8 +122,11 @@ int main() {
                          Camera_Target.y + (100 * MouseWheelTicks * -1)};
       }
     }
-    MiniMap.SetHeightOFMiniScreen({20, GetScreenHeight() - MiniMap_height});
+    MiniMap.SetHeightOFMiniScreen(
+        {(float)GetScreenWidth() - MiniMap_width - ToolbarConfig::TOOLBAR_LEFT,
+         ToolbarConfig::TOOLBAR_LEFT});
     MiniMap.Update(canvas, camera, Camera_Target);
+    zoomIndicator.UpdateLayout(Zoom);
 
     // Keep toolbar vertically centered in visible canvas area when window is
     // resized
@@ -161,22 +176,21 @@ int main() {
     // if the click is under the bar it means youve tried to change the tool
     // you are trying to draw a thing so set the origin
     // you are using the pencil .. so make the empty stroke object
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
-        !(MiniMap.IsPointINMinimap(GetMousePosition()))) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       // the element which is clicked just now is it already selected or not ?
       // remeber the distinction
       // if there is a click on the bar its the status change
       // when not then it means the things getting drawn
-      bool inBar =
-          (mouse.x >= MainBar.GetOrigin().x &&
-           mouse.x <= MainBar.GetOrigin().x + MainBar.GetDimension().x &&
-           mouse.y >= MainBar.GetOrigin().y &&
-           mouse.y <= MainBar.GetOrigin().y + MainBar.GetDimension().y);
-      if (inBar) {
-        MainBar.SelectAbutton(mouse); // click changes pressed
-        canvas.ClearSelected();
-        DragForMOve = false;
-        Clicked = nullptr;
+      if (IsPointOverUI(mouse, MainBar, MiniMap, logo, zoomIndicator)) {
+        Rectangle barRect = {MainBar.GetOrigin().x, MainBar.GetOrigin().y,
+                             MainBar.GetDimension().x,
+                             MainBar.GetDimension().y};
+        if (CheckCollisionPointRec(mouse, barRect)) {
+          MainBar.SelectAbutton(mouse); // click changes pressed
+          canvas.ClearSelected();
+          DragForMOve = false;
+          Clicked = nullptr;
+        }
       } else {
         if (MainBar.GetPressed() == TOOL_HAND) {
           Pivot_Canvas = mouse;
@@ -281,9 +295,12 @@ int main() {
 
     MainBar.UpdateState(mouse);
     MainBar.Draw();
+    logo.Draw();
     MiniMap.Draw(canvas);
+    zoomIndicator.Draw(Zoom);
     EndDrawing();
   }
 
+  logo.Unload();
   CloseWindow();
 }

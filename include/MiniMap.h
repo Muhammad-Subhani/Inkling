@@ -1,3 +1,4 @@
+#pragma once
 #include "./Canvas.h"
 #include "RectangleShape.h"
 #include "raylib.h"

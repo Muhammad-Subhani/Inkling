@@ -38,8 +38,7 @@ void MiniMap::Update(const Canvas &canvas, const Camera2D &camera,
   }
 }
 bool MiniMap::IsPointINMinimap(Vector2 p) const {
-  return (p.x >= miniWindow.x && p.x <= miniWindow.x + miniWindow.width &&
-          p.y >= miniWindow.y && p.y <= miniWindow.y + miniWindow.height);
+  return CheckCollisionPointRec(p, miniWindow);
 }
 void MiniMap::Draw(const Canvas &canvas) const {
 
