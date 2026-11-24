@@ -22,6 +22,9 @@ public:
   int GetSizeOfselected() const { return selected.size(); }
   void MoveAllSelectedTogether(Vector2 p);
   std::vector<Vector2> LocationOfEachElementInbounds();
+  Rectangle GetWorldBound() const;
+  Rectangle GetUnionRectangleCAn(Rectangle a, Rectangle b) const;
+  void DrawMiniMap() const;
 
 private:
   std::vector<std::unique_ptr<Shape>> shapes;

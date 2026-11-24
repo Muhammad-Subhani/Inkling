@@ -2,6 +2,7 @@
 #include "../include/Button.h"
 #include "../include/Canvas.h"
 #include "../include/Icons.h"
+#include "../include/MiniMap.h"
 #include "../include/ShapeFactory.h"
 #include "../include/Stroke.h"
 #include "../include/Tool.h"
@@ -9,21 +10,25 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <memory>
 #include <raylib.h>
 #include <vector>
-
+Rectangle GetUnionRectangle(Rectangle a, Rectangle b) {
+  return {std::min(a.x, b.x), std::min(a.y, b.y),
+          std::max(a.x + a.width, b.x + b.width) - std::min(a.x, b.x),
+          std::max(a.y + a.height, b.y + b.height) - std::min(a.y, b.y)};
+}
 int main() {
+  Color windowColor = {18, 18, 18, 255};
   Window window(800, 800, "Inkling");
   SetTargetFPS(60);
-
   Icons icons({"assets/icons/hand.png", "assets/icons/select.png",
                "assets/icons/rectangle.png", "assets/icons/diamond.png",
                "assets/icons/ellipse.png", "assets/icons/arrow.png",
                "assets/icons/line.png", "assets/icons/pencil.png",
                "assets/icons/text.png", "assets/icons/twinkle.png",
                "assets/icons/eraser.png"});
-
   const std::vector<const char *> shortcuts = {"H", "V", "R", "D", "O", "A",
                                                "L", "P", "T", "K", "E"};
   const std::vector<const char *> tooltips = {
@@ -76,6 +81,13 @@ int main() {
   Vector2 prev{};
   float Zoom = 1;
   Vector2 Pivot_Canvas = {0, 0};
+  float MiniMap_height = 200.0;
+  float MiniMap_width = 250.0;
+  // Rectangle miniWindow = {20, GetScreenHeight() - MiniMap_height - 10,
+  //                         MiniMap_width, MiniMap_height};
+  MiniMap MiniMap({20, GetScreenHeight() - MiniMap_height}, MiniMap_height,
+                  MiniMap_width);
+  Vector2 MiniScreenCoords{0, 0};
   while (!WindowShouldClose()) {
 
     // this part of code checks the zoom if applied else remains in 0.52--10
@@ -98,6 +110,8 @@ int main() {
                          Camera_Target.y + (100 * MouseWheelTicks * -1)};
       }
     }
+    MiniMap.SetHeightOFMiniScreen({20, GetScreenHeight() - MiniMap_height});
+    MiniMap.Update(canvas, camera, Camera_Target);
 
     // Keep toolbar vertically centered in visible canvas area when window is
     // resized
@@ -147,7 +161,8 @@ int main() {
     // if the click is under the bar it means youve tried to change the tool
     // you are trying to draw a thing so set the origin
     // you are using the pencil .. so make the empty stroke object
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+        !(MiniMap.IsPointINMinimap(GetMousePosition()))) {
       // the element which is clicked just now is it already selected or not ?
       // remeber the distinction
       // if there is a click on the bar its the status change
@@ -239,13 +254,17 @@ int main() {
         canvas.Add(std::move(activeStroke));
     }
     if (dragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-      if (MainBar.GetPressed() != TOOL_SELECT)
+      if (MainBar.GetPressed() != TOOL_SELECT) {
+        std::cout << " ORGIIN " << origin.x << " and y " << origin.y
+                  << std::endl;
         canvas.Add(MakeShape(current, origin, WorldMouse));
+      }
       dragging = false;
     }
     camera.target = Camera_Target;
+
     BeginDrawing();
-    ClearBackground(BLACK);
+    ClearBackground(windowColor);
     BeginMode2D(camera);
     canvas.Draw();
     canvas.DrawBoundaries(Zoom);
@@ -259,8 +278,10 @@ int main() {
       MakeShape(current, origin, WorldMouse)->Draw(); // live preview
     }
     EndMode2D();
+
     MainBar.UpdateState(mouse);
     MainBar.Draw();
+    MiniMap.Draw(canvas);
     EndDrawing();
   }
 

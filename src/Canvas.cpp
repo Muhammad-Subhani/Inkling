@@ -121,3 +121,24 @@ std::vector<Vector2> Canvas::LocationOfEachElementInbounds() {
   }
   return ans;
 }
+Rectangle Canvas::GetUnionRectangleCAn(Rectangle a, Rectangle b) const {
+
+  return {std::min(a.x, b.x), std::min(a.y, b.y),
+          std::max(a.x + a.width, b.x + b.width) - std::min(a.x, b.x),
+          std::max(a.y + a.height, b.y + b.height) - std::min(a.y, b.y)};
+}
+Rectangle Canvas::GetWorldBound() const {
+  Rectangle temp;
+  if (shapes.size() == 0)
+    return {0, 0, 0, 0};
+  temp = shapes[0]->GetBounds();
+  for (auto &s : shapes) {
+    temp = GetUnionRectangleCAn(temp, s->GetBounds());
+  }
+  return temp;
+}
+void Canvas::DrawMiniMap() const {
+  for (auto &s : shapes) {
+    DrawRectangleRec(s->GetBounds(), WHITE);
+  }
+}
