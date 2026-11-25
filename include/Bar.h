@@ -64,6 +64,12 @@ constexpr float STATUS_BAR_HEIGHT = TOP_BAR_HEIGHT; // alias
 
 // --transition-time: Smooth hover/active transition duration (120ms)
 constexpr float TRANSITION_TIME = 0.120f;
+
+// Shared panel styling for screen-space UI panels
+constexpr Color PANEL_BG = {35, 35, 41, 255};
+constexpr Color PANEL_TEXT = {240, 240, 245, 255};
+constexpr float PANEL_ROUNDNESS = 0.2f;
+constexpr int PANEL_ROUND_SEGMENTS = 8;
 } // namespace ToolbarConfig
 
 class Bar : public BoundedShape {
