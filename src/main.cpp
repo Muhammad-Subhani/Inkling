@@ -9,6 +9,7 @@
 #include "../include/Tool.h"
 #include "../include/ZoomIndicator.h"
 #include "../include/window.h"
+#include "../include/TextShape.h"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -30,6 +31,7 @@ bool IsPointOverUI(Vector2 point, const Bar &bar, const MiniMap &miniMap,
          zoomIndicator.Contains(point);
 }
 int main() {
+  SetExitKey(KEY_NULL);
   Color windowColor = {18, 18, 18, 255};
   Window window(800, 800, "Inkling");
   SetTargetFPS(60);
@@ -100,13 +102,25 @@ int main() {
   Logo logo(icons.Get(TOOL_PENCIL));
   ZoomIndicator zoomIndicator;
   zoomIndicator.UpdateLayout(Zoom);
+  std::unique_ptr<TextShape> activeText;
+  //[&] is a lambda capture that allows the lambda to access variables from the surrounding scope by reference.
+   //This means that any changes made to these variables within the lambda will affect the original variables outside of it.
+   // In this case, it allows the lambda to access and modify activeText, canvas, and other variables defined in the main function.
+  auto commitText = [&]() { // commit the active text shape to the canvas and discard it
+    if (!activeText)
+      return;
+    activeText->SetEditing(false);
+    if (!activeText->Empty())
+      canvas.Add(std::move(activeText));
+    activeText.reset(); // discards empty text
+  };
   while (!WindowShouldClose()) {
 
     // this part of code checks the zoom if applied else remains in 0.52--10
     camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
     if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
       float MouseWheelTicks = GetMouseWheelMove();
-      Zoom *= std::powf(1.1f, MouseWheelTicks);
+      Zoom *= std::pow(1.1f, MouseWheelTicks);
       Zoom = std::clamp(Zoom, MIN_ZOOM, MAX_ZOOM);
     }
     camera.zoom = Zoom;
@@ -142,7 +156,7 @@ int main() {
     Vector2 mouse = GetMousePosition();
     // this is the mouse coords needed for the actual infiinte world
     Vector2 WorldMouse = GetScreenToWorld2D(mouse, camera);
-    if (!dragging) { // don't switch tools mid-drag
+    if (!dragging && !activeText) { // don't switch tools mid-drag plus ensure typing isn't interrupted by pressing below mentioned keys
       if (IsKeyPressed(KEY_H))
         MainBar.ChangePressed(TOOL_HAND);
       if (IsKeyPressed(KEY_V))
@@ -182,6 +196,7 @@ int main() {
       // if there is a click on the bar its the status change
       // when not then it means the things getting drawn
       if (IsPointOverUI(mouse, MainBar, MiniMap, logo, zoomIndicator)) {
+        commitText(); // commit any active text shape when clicking on UI
         Rectangle barRect = {MainBar.GetOrigin().x, MainBar.GetOrigin().y,
                              MainBar.GetDimension().x,
                              MainBar.GetDimension().y};
@@ -194,6 +209,12 @@ int main() {
       } else {
         if (MainBar.GetPressed() == TOOL_HAND) {
           Pivot_Canvas = mouse;
+        }
+        if (MainBar.GetPressed() == TOOL_TEXT) {
+          commitText(); // finish the previous text first
+          while (GetCharPressed() != 0) {
+          } // drop leftover keys (e.g. the "T" that picked the tool)
+          activeText = std::make_unique<TextShape>(WorldMouse);
         }
         // this is a case for pencil stroke
         if (MainBar.GetPressed() == TOOL_PENCIL) {
@@ -236,6 +257,11 @@ int main() {
         }
       }
     }
+    // this portion is for typing the text in the text shape
+    if (activeText)
+      activeText->HandleTyping();
+    if (IsKeyPressed(KEY_ESCAPE))
+      commitText();
 
     // this portion when the button is being pressed and holded
     // adding the stroke in the canvas array
@@ -284,6 +310,8 @@ int main() {
     canvas.DrawBoundaries(Zoom);
     if (activeStroke)
       activeStroke->Draw();
+    if (activeText)//for text shape drawing and typing
+      activeText->Draw();
     if (dragging && !DragForMOve) {
       if (MainBar.GetPressed() == TOOL_SELECT) {
         Rectangle fresh = MakeShape(current, origin, WorldMouse)->GetBounds();
