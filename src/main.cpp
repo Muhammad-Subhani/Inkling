@@ -10,6 +10,7 @@
 #include "../include/ZoomIndicator.h"
 #include "../include/window.h"
 #include "../include/TextShape.h"
+#include "../include/Eraser.h"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -52,6 +53,7 @@ int main()
       "Text - T", "Magic wand - K", "Eraser - E"};
 
   Canvas canvas;
+  Eraser eraser;
   Vector2 Camera_Target = {0, 0};
   Camera2D camera{
       {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f}, Camera_Target, 0, 1};
@@ -260,6 +262,8 @@ int main()
             }
           }
         }
+        if (MainBar.GetPressed() == TOOL_ERASER)
+          {eraser.Begin(canvas, WorldMouse, Zoom);}
         // this is a case for pencil stroke
         if (MainBar.GetPressed() == TOOL_PENCIL)
         {
@@ -321,6 +325,12 @@ int main()
     // adding the stroke in the canvas array
     if (activeStroke && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
       activeStroke->AddPoint(WorldMouse);
+    
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && MainBar.GetPressed() == TOOL_ERASER)
+      eraser.Update(canvas, WorldMouse, Zoom);
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+      eraser.End();
+    
     // moving the slected shape through dragging
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && DragForMOve)
     {
@@ -374,6 +384,9 @@ int main()
       activeStroke->Draw();
     if (activeText) // for text shape drawing and typing
       activeText->Draw();
+    if (MainBar.GetPressed() == TOOL_ERASER &&
+      !IsPointOverUI(mouse, MainBar, MiniMap, logo, zoomIndicator))
+    eraser.DrawCursor(WorldMouse, Zoom);
     if (dragging && !DragForMOve)
     {
       if (MainBar.GetPressed() == TOOL_SELECT)

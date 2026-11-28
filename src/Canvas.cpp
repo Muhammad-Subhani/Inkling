@@ -3,10 +3,25 @@
 #include <raylib.h>
 #include <utility>
 #include <vector>
+#include <../include/TextShape.h>
+
+bool Canvas::EraseAt(Vector2 p) {
+  bool any = false;
+  for (size_t i = shapes.size(); i-- > 0;) {      // backwards so erase() doesn't skip elements
+    if (shapes[i]->Contains(p)) {
+      Shape *raw = shapes[i].get();
+      selected.erase(std::remove(selected.begin(), selected.end(), raw), //std::remove doesnt actually remove anything just push the result not equal to raw at the front of selected
+                     selected.end());             // no dangling pointer in selected
+      shapes.erase(shapes.begin() + i);           // unique_ptr frees the shape
+      any = true;
+    }
+  }
+  return any;
+}
 
 std::unique_ptr<TextShape> Canvas::TakeText(Vector2 p) {
   for (size_t i = shapes.size(); i-- > 0;) {          // topmost first
-    TextShape *t = dynamic_cast<TextShape *>(shapes[i].get());
+    TextShape *t = dynamic_cast<TextShape *>(shapes[i].get());// casting to select only textshape
     if (t && t->Contains(p)) {
       selected.erase(std::remove(selected.begin(), selected.end(),
                                  static_cast<Shape *>(t)), selected.end());

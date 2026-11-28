@@ -10,8 +10,10 @@
 #include <../include/TextShape.h>
 #include <memory>
 
+class Textshape;
 class Canvas {
 public:
+  bool EraseAt(Vector2 p);
   std::unique_ptr<TextShape> TakeText(Vector2 p);
   void Add(std::unique_ptr<Shape> s);
   void Draw() const;
