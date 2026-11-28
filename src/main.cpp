@@ -17,21 +17,24 @@
 #include <memory>
 #include <raylib.h>
 #include <vector>
-Rectangle GetUnionRectangle(Rectangle a, Rectangle b) {
+Rectangle GetUnionRectangle(Rectangle a, Rectangle b)
+{
   return {std::min(a.x, b.x), std::min(a.y, b.y),
           std::max(a.x + a.width, b.x + b.width) - std::min(a.x, b.x),
           std::max(a.y + a.height, b.y + b.height) - std::min(a.y, b.y)};
 }
 bool IsPointOverUI(Vector2 point, const Bar &bar, const MiniMap &miniMap,
-                   const Logo &logo, const ZoomIndicator &zoomIndicator) {
+                   const Logo &logo, const ZoomIndicator &zoomIndicator)
+{
   Rectangle barRect = {bar.GetOrigin().x, bar.GetOrigin().y,
                        bar.GetDimension().x, bar.GetDimension().y};
   return CheckCollisionPointRec(point, barRect) ||
          miniMap.IsPointINMinimap(point) || logo.Contains(point) ||
          zoomIndicator.Contains(point);
 }
-int main() {
-  
+int main()
+{
+
   Color windowColor = {18, 18, 18, 255};
   Window window(800, 800, "Inkling");
   SetTargetFPS(60);
@@ -44,9 +47,9 @@ int main() {
   const std::vector<const char *> shortcuts = {"H", "V", "R", "D", "O", "A",
                                                "L", "P", "T", "K", "E"};
   const std::vector<const char *> tooltips = {
-      "Hand - H",    "Select - V",     "Rectangle - R", "Diamond - D",
-      "Ellipse - O", "Arrow - A",      "Line - L",      "Draw - P",
-      "Text - T",    "Magic wand - K", "Eraser - E"};
+      "Hand - H", "Select - V", "Rectangle - R", "Diamond - D",
+      "Ellipse - O", "Arrow - A", "Line - L", "Draw - P",
+      "Text - T", "Magic wand - K", "Eraser - E"};
 
   Canvas canvas;
   Vector2 Camera_Target = {0, 0};
@@ -62,17 +65,21 @@ int main() {
   float canvasHeight = (float)GetScreenHeight() - canvasTop;
   float MainBarY = canvasTop + (canvasHeight - 560.0f) / 2.0f;
   Bar MainBar(Vector2{MainBarX, MainBarY});
-  for (size_t i = 0; i < 11; i++) {
+  for (size_t i = 0; i < 11; i++)
+  {
     auto btn =
         std::make_unique<Button>(Vector2{0, 0}, ToolbarConfig::TOOL_BTN_SIZE,
                                  ToolbarConfig::TOOL_BTN_SIZE);
-    if (i < icons.Count()) {
+    if (i < icons.Count())
+    {
       btn->SetIcon(icons.Get(i));
     }
-    if (i < shortcuts.size()) {
+    if (i < shortcuts.size())
+    {
       btn->SetShortcut(shortcuts[i]);
     }
-    if (i < tooltips.size()) {
+    if (i < tooltips.size())
+    {
       btn->SetTooltip(tooltips[i]);
     }
     MainBar.Add(std::move(btn));
@@ -104,8 +111,8 @@ int main() {
   zoomIndicator.UpdateLayout(Zoom);
   std::unique_ptr<TextShape> activeText;
   //[&] is a lambda capture that allows the lambda to access variables from the surrounding scope by reference.
-   //This means that any changes made to these variables within the lambda will affect the original variables outside of it.
-   // In this case, it allows the lambda to access and modify activeText, canvas, and other variables defined in the main function.
+  // This means that any changes made to these variables within the lambda will affect the original variables outside of it.
+  // In this case, it allows the lambda to access and modify activeText, canvas, and other variables defined in the main function.
   auto commitText = [&]() { // commit the active text shape to the canvas and discard it
     if (!activeText)
       return;
@@ -114,24 +121,30 @@ int main() {
       canvas.Add(std::move(activeText));
     activeText.reset(); // discards empty text
   };
-  while (!WindowShouldClose()) {
+  while (!WindowShouldClose())
+  {
     SetExitKey(KEY_NULL);
 
     // this part of code checks the zoom if applied else remains in 0.52--10
     camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-    if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) {
+    if (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))
+    {
       float MouseWheelTicks = GetMouseWheelMove();
       Zoom *= std::pow(1.1f, MouseWheelTicks);
       Zoom = std::clamp(Zoom, MIN_ZOOM, MAX_ZOOM);
     }
     camera.zoom = Zoom;
     // moving vertically
-    if (!IsKeyDown(KEY_LEFT_CONTROL) && !IsKeyDown(KEY_RIGHT_CONTROL)) {
-      if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
+    if (!IsKeyDown(KEY_LEFT_CONTROL) && !IsKeyDown(KEY_RIGHT_CONTROL))
+    {
+      if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))
+      {
         float MouseWheelTicks = GetMouseWheelMove();
         Camera_Target = {Camera_Target.x + (100 * MouseWheelTicks),
                          Camera_Target.y};
-      } else if (!IsKeyDown(KEY_LEFT_SHIFT) && !IsKeyDown(KEY_RIGHT_SHIFT)) {
+      }
+      else if (!IsKeyDown(KEY_LEFT_SHIFT) && !IsKeyDown(KEY_RIGHT_SHIFT))
+      {
         float MouseWheelTicks = GetMouseWheelMove();
         Camera_Target = {Camera_Target.x,
                          Camera_Target.y + (100 * MouseWheelTicks * -1)};
@@ -150,14 +163,16 @@ int main() {
     float targetBarY = currentCanvasTop +
                        (currentCanvasHeight - MainBar.GetDimension().y) / 2.0f;
     if (MainBar.GetOrigin().y != targetBarY ||
-        MainBar.GetOrigin().x != ToolbarConfig::TOOLBAR_LEFT) {
+        MainBar.GetOrigin().x != ToolbarConfig::TOOLBAR_LEFT)
+    {
       MainBar.SetPosition(Vector2{ToolbarConfig::TOOLBAR_LEFT, targetBarY});
     }
     // this is the mouse for the screen
     Vector2 mouse = GetMousePosition();
     // this is the mouse coords needed for the actual infiinte world
     Vector2 WorldMouse = GetScreenToWorld2D(mouse, camera);
-    if (!dragging && !activeText) { // don't switch tools mid-drag plus ensure typing isn't interrupted by pressing below mentioned keys
+    if (!dragging && !activeText)
+    { // don't switch tools mid-drag plus ensure typing isn't interrupted by pressing below mentioned keys
       if (IsKeyPressed(KEY_H))
         MainBar.ChangePressed(TOOL_HAND);
       if (IsKeyPressed(KEY_V))
@@ -180,7 +195,8 @@ int main() {
         MainBar.ChangePressed(TOOL_ERASER);
       if (IsKeyPressed(KEY_H) || IsKeyPressed(KEY_V) || IsKeyPressed(KEY_R) ||
           IsKeyPressed(KEY_D) || IsKeyPressed(KEY_O) || IsKeyPressed(KEY_A) ||
-          IsKeyPressed(KEY_L) || IsKeyPressed(KEY_P) || IsKeyPressed(KEY_T) || IsKeyPressed(KEY_E)) {
+          IsKeyPressed(KEY_L) || IsKeyPressed(KEY_P) || IsKeyPressed(KEY_T) || IsKeyPressed(KEY_E))
+      {
         canvas.ClearSelected();
         DragForMOve = false;
         Pivot_Canvas = mouse;
@@ -193,67 +209,101 @@ int main() {
     // if the click is under the bar it means youve tried to change the tool
     // you are trying to draw a thing so set the origin
     // you are using the pencil .. so make the empty stroke object
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
       // the element which is clicked just now is it already selected or not ?
       // remeber the distinction
       // if there is a click on the bar its the status change
       // when not then it means the things getting drawn
-      if (IsPointOverUI(mouse, MainBar, MiniMap, logo, zoomIndicator)) {
+      if (IsPointOverUI(mouse, MainBar, MiniMap, logo, zoomIndicator))
+      {
         commitText(); // commit any active text shape when clicking on UI
         Rectangle barRect = {MainBar.GetOrigin().x, MainBar.GetOrigin().y,
                              MainBar.GetDimension().x,
                              MainBar.GetDimension().y};
-        if (CheckCollisionPointRec(mouse, barRect)) {
+        if (CheckCollisionPointRec(mouse, barRect))
+        {
           MainBar.SelectAbutton(mouse); // click changes pressed
           canvas.ClearSelected();
           DragForMOve = false;
           Clicked = nullptr;
         }
-      } else {
-        if (MainBar.GetPressed() == TOOL_HAND) {
+      }
+      else
+      {
+        if (MainBar.GetPressed() == TOOL_HAND)
+        {
           Pivot_Canvas = mouse;
         }
-        
-        if (MainBar.GetPressed() == TOOL_TEXT) {
-          commitText(); // finish the previous text first
-          while (GetCharPressed() != 0) {
+
+        if (MainBar.GetPressed() == TOOL_TEXT)
+        {
+          if (activeText && activeText->Contains(WorldMouse))
+          {
+            activeText->SetCursorFromClick(WorldMouse); // clicking inside the text you're editing just moves the cursor
           }
-          activeText = std::make_unique<TextShape>(WorldMouse);
+          else
+          {
+            commitText();
+            while (GetCharPressed() != 0)
+            {
+            }
+            activeText = canvas.TakeText(WorldMouse); // existing text under the mouse?
+            if (activeText)
+            {
+              activeText->SetEditing(true);
+              activeText->SetCursorFromClick(WorldMouse);
+            }
+            else
+            {
+              activeText = std::make_unique<TextShape>(WorldMouse);
+            }
+          }
         }
         // this is a case for pencil stroke
-        if (MainBar.GetPressed() == TOOL_PENCIL) {
+        if (MainBar.GetPressed() == TOOL_PENCIL)
+        {
           activeStroke = std::make_unique<Stroke>();
           activeStroke->AddPoint(WorldMouse);
         }
         // this piece of code decides which element will be drawn
-        if (ToolToShape(MainBar.GetPressed(), current)) {
+        if (ToolToShape(MainBar.GetPressed(), current))
+        {
           origin = WorldMouse; // only start a drag for shape tools
           dragging = true;
         }
         // for selecting any shape
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-            MainBar.GetPressed() == TOOL_SELECT) {
+            MainBar.GetPressed() == TOOL_SELECT)
+        {
           bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
           canvas.SetSelected(WorldMouse, shift);
-          if (canvas.GetSizeOfselected() == 0) {
+          if (canvas.GetSizeOfselected() == 0)
+          {
             Clicked = nullptr;
             DragForMOve = false;
           }
         }
         // setting the pivot  the selected shape in order to move it
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-            MainBar.GetPressed() == TOOL_SELECT) {
+            MainBar.GetPressed() == TOOL_SELECT)
+        {
           Clicked = canvas.BodyClickedCheck(WorldMouse);
-          if (!Clicked && canvas.GetSizeOfselected() == 0) {
+          if (!Clicked && canvas.GetSizeOfselected() == 0)
+          {
             pivot = {0, 0};
             prev = {0, 0};
             DragForMOve = false;
             Clicked = nullptr;
-          } else if (Clicked && canvas.GetSizeOfselected() == 1) {
+          }
+          else if (Clicked && canvas.GetSizeOfselected() == 1)
+          {
             pivot = {WorldMouse.x - Clicked->GetBounds().x,
                      WorldMouse.y - Clicked->GetBounds().y};
             DragForMOve = true;
-          } else if (canvas.GetSizeOfselected() > 1) {
+          }
+          else if (canvas.GetSizeOfselected() > 1)
+          {
             Rectangle temp = canvas.GetWholeARect();
             pivot = {WorldMouse.x - temp.x, WorldMouse.y - temp.y};
             DragForMOve = true;
@@ -272,20 +322,25 @@ int main() {
     if (activeStroke && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
       activeStroke->AddPoint(WorldMouse);
     // moving the slected shape through dragging
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && DragForMOve) {
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && DragForMOve)
+    {
       // Vector2 mouse = GetMousePosition();
-      if (WorldMouse.x != prev.x || WorldMouse.y != prev.y) {
+      if (WorldMouse.x != prev.x || WorldMouse.y != prev.y)
+      {
         prev = WorldMouse;
-        if (canvas.GetSizeOfselected() > 1) {
+        if (canvas.GetSizeOfselected() > 1)
+        {
           canvas.MoveAllSelectedTogether(
               {WorldMouse.x - pivot.x, WorldMouse.y - pivot.y});
-        } else
+        }
+        else
           Clicked->MoveElement(
               {WorldMouse.x - pivot.x, WorldMouse.y - pivot.y});
       }
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) &&
-        MainBar.GetPressed() == TOOL_HAND) {
+        MainBar.GetPressed() == TOOL_HAND)
+    {
       float Xpos = mouse.x - Pivot_Canvas.x;
       float Ypos = mouse.y - Pivot_Canvas.y;
       Camera_Target = {Camera_Target.x - Xpos, Camera_Target.y - Ypos};
@@ -293,12 +348,15 @@ int main() {
     }
     // mouse released
     if (MainBar.GetPressed() == TOOL_PENCIL && activeStroke &&
-        IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+    {
       if (MainBar.GetPressed() == TOOL_PENCIL)
         canvas.Add(std::move(activeStroke));
     }
-    if (dragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-      if (MainBar.GetPressed() != TOOL_SELECT) {
+    if (dragging && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+    {
+      if (MainBar.GetPressed() != TOOL_SELECT)
+      {
         std::cout << " ORGIIN " << origin.x << " and y " << origin.y
                   << std::endl;
         canvas.Add(MakeShape(current, origin, WorldMouse));
@@ -314,10 +372,12 @@ int main() {
     canvas.DrawBoundaries(Zoom);
     if (activeStroke)
       activeStroke->Draw();
-    if (activeText)//for text shape drawing and typing
+    if (activeText) // for text shape drawing and typing
       activeText->Draw();
-    if (dragging && !DragForMOve) {
-      if (MainBar.GetPressed() == TOOL_SELECT) {
+    if (dragging && !DragForMOve)
+    {
+      if (MainBar.GetPressed() == TOOL_SELECT)
+      {
         Rectangle fresh = MakeShape(current, origin, WorldMouse)->GetBounds();
         canvas.CheckForEnclosingShapes(fresh);
       }

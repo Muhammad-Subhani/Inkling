@@ -7,8 +7,12 @@
 #include <memory>
 #include <raylib.h>
 #include <vector>
+#include <../include/TextShape.h>
+#include <memory>
+
 class Canvas {
 public:
+  std::unique_ptr<TextShape> TakeText(Vector2 p);
   void Add(std::unique_ptr<Shape> s);
   void Draw() const;
   Shape *PickAt(Vector2 p) const;

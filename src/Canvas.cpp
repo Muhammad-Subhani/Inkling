@@ -3,6 +3,21 @@
 #include <raylib.h>
 #include <utility>
 #include <vector>
+
+std::unique_ptr<TextShape> Canvas::TakeText(Vector2 p) {
+  for (size_t i = shapes.size(); i-- > 0;) {          // topmost first
+    TextShape *t = dynamic_cast<TextShape *>(shapes[i].get());
+    if (t && t->Contains(p)) {
+      selected.erase(std::remove(selected.begin(), selected.end(),
+                                 static_cast<Shape *>(t)), selected.end());
+      std::unique_ptr<TextShape> out(t);
+      shapes[i].release();                            // give up ownership
+      shapes.erase(shapes.begin() + i);
+      return out;
+    }
+  }
+  return nullptr;
+}
 void Canvas::Add(std::unique_ptr<Shape> s) { shapes.push_back(std::move(s)); }
 void Canvas::Draw() const {
   for (const auto &s : shapes)
