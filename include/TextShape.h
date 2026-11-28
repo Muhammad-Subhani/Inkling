@@ -42,4 +42,5 @@ private:
   Vector2 pos_;
   float size_;
   bool editing_ = true;
+  
 };

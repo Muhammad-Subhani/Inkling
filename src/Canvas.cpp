@@ -18,6 +18,8 @@ Shape *Canvas::PickAt(Vector2 p) const {
 Shape *Canvas::BodyClickedCheck(Vector2 p) const {
   for (auto &x : shapes) {
     if (x->ClickedInBody(p))
+      
+      
       return x.get();
   }
   return nullptr;

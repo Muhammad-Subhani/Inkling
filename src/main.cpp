@@ -31,7 +31,7 @@ bool IsPointOverUI(Vector2 point, const Bar &bar, const MiniMap &miniMap,
          zoomIndicator.Contains(point);
 }
 int main() {
-  SetExitKey(KEY_NULL);
+  
   Color windowColor = {18, 18, 18, 255};
   Window window(800, 800, "Inkling");
   SetTargetFPS(60);
@@ -115,6 +115,7 @@ int main() {
     activeText.reset(); // discards empty text
   };
   while (!WindowShouldClose()) {
+    SetExitKey(KEY_NULL);
 
     // this part of code checks the zoom if applied else remains in 0.52--10
     camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
@@ -175,9 +176,11 @@ int main() {
         MainBar.ChangePressed(TOOL_PENCIL);
       if (IsKeyPressed(KEY_T))
         MainBar.ChangePressed(TOOL_TEXT);
+      if (IsKeyPressed(KEY_E))
+        MainBar.ChangePressed(TOOL_ERASER);
       if (IsKeyPressed(KEY_H) || IsKeyPressed(KEY_V) || IsKeyPressed(KEY_R) ||
           IsKeyPressed(KEY_D) || IsKeyPressed(KEY_O) || IsKeyPressed(KEY_A) ||
-          IsKeyPressed(KEY_L) || IsKeyPressed(KEY_P) || IsKeyPressed(KEY_T)) {
+          IsKeyPressed(KEY_L) || IsKeyPressed(KEY_P) || IsKeyPressed(KEY_T) || IsKeyPressed(KEY_E)) {
         canvas.ClearSelected();
         DragForMOve = false;
         Pivot_Canvas = mouse;
@@ -210,10 +213,11 @@ int main() {
         if (MainBar.GetPressed() == TOOL_HAND) {
           Pivot_Canvas = mouse;
         }
+        
         if (MainBar.GetPressed() == TOOL_TEXT) {
           commitText(); // finish the previous text first
           while (GetCharPressed() != 0) {
-          } // drop leftover keys (e.g. the "T" that picked the tool)
+          }
           activeText = std::make_unique<TextShape>(WorldMouse);
         }
         // this is a case for pencil stroke
