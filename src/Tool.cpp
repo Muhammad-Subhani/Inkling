@@ -14,7 +14,11 @@ bool ToolToShape(int tool, ShapeType &out) {
   case TOOL_SELECT:
     out = ShapeType::SelectionMarquee;
     return true;
+  case TOOL_LINE:
+    out = ShapeType::Line;
+    return true;
   }
+  
 
   return false; // hand, select, arrow, etc. aren't shapes yet
 }

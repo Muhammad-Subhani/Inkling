@@ -25,8 +25,11 @@ void Eraser::Sweep(Canvas &c, Vector2 a, Vector2 b, float zoom) {
   for (int i = 0; i <= steps; i++) {
     float t = (float)i / steps;
     Vector2 p = {a.x + dx * t, a.y + dy * t};
-    c.EraseAt(p);                                   // centre plus a small cross
-    c.EraseAt({p.x + r, p.y});                      // so the eraser has some width
+    //practically speaking the eraser is a circle so we need to erase at the centre 
+    //but it's a pain in the ass to erase a circle so i will just erase at the centre and four points around it 
+    // magar sabko lagy ga circle meh erase ho raha hai ;)
+    c.EraseAt(p);                                   
+    c.EraseAt({p.x + r, p.y});                      
     c.EraseAt({p.x - r, p.y});
     c.EraseAt({p.x, p.y + r});
     c.EraseAt({p.x, p.y - r});

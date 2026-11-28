@@ -1,7 +1,7 @@
 #pragma once
-#include "BoundedShape.h"
+#include "Shape.h"
 #include <iostream>
 #include <memory>
 #include <raylib.h>
-enum class ShapeType { Rect, Ellipse, Diamond, SelectionMarquee };
-std::unique_ptr<BoundedShape> MakeShape(ShapeType t, Vector2 a, Vector2 b);
+enum class ShapeType { Rect, Ellipse, Diamond, Line, SelectionMarquee };
+std::unique_ptr<Shape> MakeShape(ShapeType t, Vector2 a, Vector2 b);
